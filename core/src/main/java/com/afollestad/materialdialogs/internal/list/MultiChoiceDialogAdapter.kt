@@ -1,7 +1,17 @@
-/*
- * Licensed under Apache-2.0
- *
+/**
  * Designed and developed by Aidan Follestad (@afollestad)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.afollestad.materialdialogs.internal.list
 
@@ -20,9 +30,9 @@ import com.afollestad.materialdialogs.list.MultiChoiceListener
 import com.afollestad.materialdialogs.list.getItemSelector
 import com.afollestad.materialdialogs.utils.appendAll
 import com.afollestad.materialdialogs.utils.inflate
-import com.afollestad.materialdialogs.utils.maybeSetTextColor
 import com.afollestad.materialdialogs.utils.pullIndices
 import com.afollestad.materialdialogs.utils.removeAll
+import com.afollestad.materialdialogs.utils.MDUtil.maybeSetTextColor
 
 /** @author Aidan Follestad (afollestad) */
 internal class MultiChoiceViewHolder(

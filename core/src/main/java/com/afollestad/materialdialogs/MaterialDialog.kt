@@ -1,7 +1,17 @@
-/*
- * Licensed under Apache-2.0
- *
+/**
  * Designed and developed by Aidan Follestad (@afollestad)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 @file:Suppress("unused")
 
@@ -11,9 +21,6 @@ import android.app.Dialog
 import android.content.Context
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
-import android.view.View
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.annotation.CheckResult
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -24,12 +31,8 @@ import com.afollestad.materialdialogs.WhichButton.POSITIVE
 import com.afollestad.materialdialogs.actions.getActionButton
 import com.afollestad.materialdialogs.callbacks.invokeAll
 import com.afollestad.materialdialogs.internal.list.DialogAdapter
-import com.afollestad.materialdialogs.internal.list.DialogRecyclerView
 import com.afollestad.materialdialogs.internal.main.DialogLayout
-import com.afollestad.materialdialogs.internal.main.DialogScrollView
 import com.afollestad.materialdialogs.list.getListAdapter
-import com.afollestad.materialdialogs.utils.addContentMessageView
-import com.afollestad.materialdialogs.utils.addContentScrollView
 import com.afollestad.materialdialogs.utils.hideKeyboard
 import com.afollestad.materialdialogs.utils.inflate
 import com.afollestad.materialdialogs.utils.isVisible
@@ -65,6 +68,11 @@ class MaterialDialog(
    */
   val config: MutableMap<String, Any> = mutableMapOf()
 
+  @Suppress("UNCHECKED_CAST")
+  fun <T> config(key: String): T {
+    return config[key] as T
+  }
+
   /** Returns true if auto dismiss is enabled. */
   var autoDismissEnabled: Boolean = true
     internal set
@@ -77,11 +85,6 @@ class MaterialDialog(
     internal set
 
   internal val view: DialogLayout = inflate(R.layout.md_dialog_base)
-  internal var textViewMessage: TextView? = null
-  internal var contentScrollView: DialogScrollView? = null
-  internal var contentScrollViewFrame: LinearLayout? = null
-  internal var contentRecyclerView: DialogRecyclerView? = null
-  internal var contentCustomView: View? = null
 
   internal val preShowListeners = mutableListOf<DialogCallback>()
   internal val showListeners = mutableListOf<DialogCallback>()
@@ -153,11 +156,15 @@ class MaterialDialog(
     html: Boolean = false,
     lineHeightMultiplier: Float = 1f
   ): MaterialDialog {
-    if (this.contentCustomView != null) {
-      throw IllegalStateException("message() should be used BEFORE customView().")
-    }
-    addContentScrollView()
-    addContentMessageView(res, text, html, lineHeightMultiplier)
+    assertOneSet("message", text, res)
+    this.view.contentLayout.setMessage(
+        dialog = this,
+        res = res,
+        text = text,
+        html = html,
+        lineHeightMultiplier = lineHeightMultiplier,
+        typeface = this.bodyFont
+    )
     return this
   }
 

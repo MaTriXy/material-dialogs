@@ -1,7 +1,17 @@
-/*
- * Licensed under Apache-2.0
- *
+/**
  * Designed and developed by Aidan Follestad (@afollestad)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.afollestad.materialdialogs.utils
 
@@ -12,7 +22,6 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewGroup.MarginLayoutParams
 import android.view.ViewTreeObserver
 import android.widget.Button
 import android.widget.TextView
@@ -31,13 +40,20 @@ internal fun <T> MaterialDialog.inflate(
   root: ViewGroup? = null
 ) = LayoutInflater.from(windowContext).inflate(res, root, false) as T
 
-internal fun <T : View> T.updatePadding(
-  left: Int = this.paddingLeft,
-  top: Int = this.paddingTop,
-  right: Int = this.paddingRight,
-  bottom: Int = this.paddingBottom
+@Suppress("UNCHECKED_CAST")
+internal fun <T> ViewGroup.inflate(
+  @LayoutRes res: Int,
+  root: ViewGroup? = this
+) = LayoutInflater.from(context).inflate(res, root, false) as T
+
+internal fun <T : View> T?.updatePadding(
+  left: Int = this?.paddingLeft ?: 0,
+  top: Int = this?.paddingTop ?: 0,
+  right: Int = this?.paddingRight ?: 0,
+  bottom: Int = this?.paddingBottom ?: 0
 ) {
-  if (left == this.paddingLeft &&
+  if (this != null &&
+      left == this.paddingLeft &&
       top == this.paddingTop &&
       right == this.paddingRight &&
       bottom == this.paddingBottom
@@ -45,31 +61,7 @@ internal fun <T : View> T.updatePadding(
     // no change needed, don't want to invalidate layout
     return
   }
-  this.setPadding(left, top, right, bottom)
-}
-
-internal fun <T : View> T.topMargin() = (this.layoutParams as MarginLayoutParams).topMargin
-
-internal fun <T : View> T.updateMargin(
-  left: Int = -1,
-  top: Int = -1,
-  right: Int = -1,
-  bottom: Int = -1
-) {
-  val layoutParams = this.layoutParams as MarginLayoutParams
-  if (left != -1) {
-    layoutParams.leftMargin = left
-  }
-  if (top != -1) {
-    layoutParams.topMargin = top
-  }
-  if (right != -1) {
-    layoutParams.rightMargin = right
-  }
-  if (bottom != -1) {
-    layoutParams.bottomMargin = bottom
-  }
-  this.layoutParams = layoutParams
+  this?.setPadding(left, top, right, bottom)
 }
 
 internal inline fun <T : View> T.waitForLayout(crossinline f: T.() -> Unit) =
@@ -80,7 +72,7 @@ internal inline fun <T : View> T.waitForLayout(crossinline f: T.() -> Unit) =
         this@waitForLayout.f()
       }
     })
-  }
+  }!!
 
 internal fun <T : View> T.isVisible(): Boolean {
   return if (this is Button) {
