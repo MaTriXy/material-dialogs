@@ -15,7 +15,6 @@
  */
 package com.afollestad.materialdialogs.color
 
-import android.R.attr
 import android.annotation.SuppressLint
 import android.content.Context.INPUT_METHOD_SERVICE
 import android.graphics.Color
@@ -57,6 +56,7 @@ private const val KEY_CUSTOM_PAGE_VIEW_SET = "color_custom_page_view_set"
 private const val KEY_CUSTOM_ARGB = "color_custom_argb"
 private const val KEY_SHOW_ALPHA = "color_show_alpha"
 private const val KEY_WAIT_FOR_POSITIVE = "color_wait_for_positive"
+private const val KEY_CHANGE_ACTION_BUTTON_COLOR = "color_change_action_button_color"
 
 /**
  * Shows a dialog with a grid of colors that the user can select from.
@@ -68,6 +68,7 @@ private const val KEY_WAIT_FOR_POSITIVE = "color_wait_for_positive"
  *    a color and taps on the positive action button. Defaults to true if the dialog has buttons.
  * @param allowCustomArgb Allows selection of a color with an (A)RGB slider view
  * @param showAlphaSelector Allows selection alpha (transparency) values in (A)RGB mode.
+ * @param changeActionButtonsColor When true, action button colors will match the selected color.
  * @param selection An optional callback invoked when the user selects a color.
  */
 @SuppressLint("CheckResult")
@@ -79,12 +80,14 @@ fun MaterialDialog.colorChooser(
   waitForPositiveButton: Boolean = true,
   allowCustomArgb: Boolean = false,
   showAlphaSelector: Boolean = false,
+  changeActionButtonsColor: Boolean = false,
   selection: ColorCallback = null
 ): MaterialDialog {
   config.run {
     set(KEY_WAIT_FOR_POSITIVE, waitForPositiveButton)
     set(KEY_CUSTOM_ARGB, allowCustomArgb)
     set(KEY_SHOW_ALPHA, showAlphaSelector)
+    set(KEY_CHANGE_ACTION_BUTTON_COLOR, changeActionButtonsColor)
   }
 
   if (!allowCustomArgb) {
@@ -115,7 +118,7 @@ fun MaterialDialog.colorChooser(
           context.getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager
         imm?.hideSoftInputFromWindow(hexValueView.windowToken, 0)
       } else {
-        invalidateDividers(false, false)
+        invalidateDividers(showTop = false, showBottom = false)
       }
     }
 
@@ -194,7 +197,7 @@ private fun MaterialDialog.setupGridLayout(
       initialSelection = initialSelection,
       waitForPositiveButton = waitForPositiveButton,
       callback = selection,
-      enableARGBButton = allowCustomArgb && isLandscape(context)
+      enableARGBButton = allowCustomArgb && context.isLandscape()
   )
   gridRecyclerView.adapter = adapter
 }
@@ -213,7 +216,7 @@ private fun MaterialDialog.setupCustomPage(
     viewSet.setColorAlpha(ALPHA_SOLID)
   }
 
-  val landscape = isLandscape(context)
+  val landscape = context.isLandscape()
   if (!supportCustomAlpha) {
     viewSet.alphaLabel.changeHeight(0)
     viewSet.alphaSeeker.changeHeight(0)
@@ -294,15 +297,18 @@ internal fun MaterialDialog.setPage(@IntRange(from = 0, to = 1) index: Int) {
 }
 
 internal fun MaterialDialog.updateActionButtonsColor(@ColorInt color: Int) {
+  val changeButtonColor: Boolean = config(KEY_CHANGE_ACTION_BUTTON_COLOR)
+  if (!changeButtonColor) return
+
   val adjustedColor = Color.rgb(Color.red(color), Color.green(color), Color.blue(color))
   val isAdjustedDark = adjustedColor.isColorDark(0.25)
   val isPrimaryDark =
-    resolveColor(context = context, attr = attr.textColorPrimary).isColorDark()
+    resolveColor(context = context, attr = android.R.attr.textColorPrimary).isColorDark()
 
   val finalColor = if (isPrimaryDark && !isAdjustedDark) {
-    resolveColor(context = context, attr = attr.textColorPrimary)
+    resolveColor(context = context, attr = android.R.attr.textColorPrimary)
   } else if (!isPrimaryDark && isAdjustedDark) {
-    resolveColor(context = context, attr = attr.textColorPrimaryInverse)
+    resolveColor(context = context, attr = android.R.attr.textColorPrimaryInverse)
   } else {
     adjustedColor
   }

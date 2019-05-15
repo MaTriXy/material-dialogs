@@ -27,13 +27,15 @@ import androidx.annotation.CheckResult
 import androidx.annotation.RestrictTo
 import androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.LayoutManager
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.R
-import com.afollestad.materialdialogs.R.attr
-import com.afollestad.materialdialogs.assertOneSet
+import com.afollestad.materialdialogs.internal.list.DialogAdapter
 import com.afollestad.materialdialogs.internal.list.PlainListDialogAdapter
+import com.afollestad.materialdialogs.utils.MDUtil.assertOneSet
+import com.afollestad.materialdialogs.utils.MDUtil.getStringArray
+import com.afollestad.materialdialogs.utils.MDUtil.ifNotZero
 import com.afollestad.materialdialogs.utils.MDUtil.resolveDrawable
-import com.afollestad.materialdialogs.utils.getStringArray
 import com.afollestad.materialdialogs.utils.resolveColor
 
 /**
@@ -58,11 +60,13 @@ import com.afollestad.materialdialogs.utils.resolveColor
  * Cannot be used in combination with message, input, and some other types of dialogs.
  */
 @CheckResult fun MaterialDialog.customListAdapter(
-  adapter: RecyclerView.Adapter<*>
+  adapter: RecyclerView.Adapter<*>,
+  layoutManager: LayoutManager? = null
 ): MaterialDialog {
   this.view.contentLayout.addRecyclerView(
       dialog = this,
-      adapter = adapter
+      adapter = adapter,
+      layoutManager = layoutManager
   )
   return this
 }
@@ -82,15 +86,14 @@ import com.afollestad.materialdialogs.utils.resolveColor
   selection: ItemListener = null
 ): MaterialDialog {
   assertOneSet("listItems", items, res)
-  val array = items ?: getStringArray(res)?.toList() ?: return this
-  val adapter = getListAdapter()
+  val array = items ?: windowContext.getStringArray(res).toList()
 
-  if (adapter is PlainListDialogAdapter) {
-    adapter.replaceItems(array, selection)
-    if (disabledIndices != null) {
-      adapter.disableItems(disabledIndices)
-    }
-    return this
+  if (getListAdapter() != null) {
+    return updateListItems(
+        res = res,
+        items = items,
+        disabledIndices = disabledIndices
+    )
   }
 
   return customListAdapter(
@@ -98,19 +101,47 @@ import com.afollestad.materialdialogs.utils.resolveColor
           dialog = this,
           items = array,
           disabledItems = disabledIndices,
-          waitForActionButton = waitForPositiveButton,
+          waitForPositiveButton = waitForPositiveButton,
           selection = selection
       )
   )
 }
 
+/**
+ * Updates the items, and optionally the disabled indices, of a plain, single choice,
+ * or multi-choice list dialog.
+ *
+ * @author Aidan Follestad (@afollestad)
+ */
+fun MaterialDialog.updateListItems(
+  @ArrayRes res: Int? = null,
+  items: List<String>? = null,
+  disabledIndices: IntArray? = null
+): MaterialDialog {
+  assertOneSet("updateListItems", items, res)
+  val array = items ?: windowContext.getStringArray(res).toList()
+  val adapter = getListAdapter()
+  check(adapter != null) {
+    "updateListItems(...) can't be used before you've created a list dialog."
+  }
+  if (adapter is DialogAdapter<*, *>) {
+    @Suppress("UNCHECKED_CAST")
+    (adapter as DialogAdapter<String, *>).replaceItems(array)
+
+    if (disabledIndices != null) {
+      adapter.disableItems(disabledIndices)
+    }
+  }
+  return this
+}
+
+/** @author Aidan Follestad (@afollestad) */
 @RestrictTo(LIBRARY_GROUP)
 fun MaterialDialog.getItemSelector(): Drawable? {
-  val drawable = resolveDrawable(context = context, attr = attr.md_item_selector)
+  val drawable = resolveDrawable(context = context, attr = R.attr.md_item_selector)
   if (SDK_INT >= LOLLIPOP && drawable is RippleDrawable) {
-    val rippleColor = resolveColor(attr = R.attr.md_ripple_color)
-    if (rippleColor != 0) {
-      drawable.setColor(valueOf(rippleColor))
+    resolveColor(attr = R.attr.md_ripple_color).ifNotZero {
+      drawable.setColor(valueOf(it))
     }
   }
   return drawable
