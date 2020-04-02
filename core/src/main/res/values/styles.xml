@@ -8,6 +8,7 @@
 
     <item name="android:actionModeBackground">@color/primary_material_dark</item>
     <item name="android:actionModeCloseDrawable">@drawable/md_nav_back</item>
+    <item name="android:windowNoTitle">true</item>
 
     <item name="android:windowAnimationStyle">@style/MD_WindowAnimation</item>
     <item name="android:backgroundDimEnabled">true</item>
@@ -27,6 +28,7 @@
 
     <item name="android:windowAnimationStyle">@style/MD_WindowAnimation</item>
     <item name="android:backgroundDimEnabled">true</item>
+    <item name="android:windowNoTitle">true</item>
 
     <item name="md_divider_color">@color/md_divider_dark_theme</item>
     <item name="md_item_selector">@drawable/md_item_selector_dark</item>
@@ -140,6 +142,8 @@
     <item name="android:layout_height">wrap_content</item>
     <item name="android:gravity">start|center_vertical</item>
     <item name="android:layout_gravity">start|center_vertical</item>
+    <item name="android:layout_marginLeft">@dimen/md_listitem_margin_left_choice</item>
+    <item name="android:layout_marginStart">@dimen/md_listitem_margin_left_choice</item>
     <item name="android:minHeight">@dimen/md_listitem_height</item>
     <item name="android:paddingBottom">@dimen/md_listitem_vertical_margin_choice</item>
     <item name="android:paddingLeft">@dimen/md_listitem_control_margin</item>

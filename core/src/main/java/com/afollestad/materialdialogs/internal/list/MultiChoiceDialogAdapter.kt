@@ -30,8 +30,8 @@ import com.afollestad.materialdialogs.actions.setActionButtonEnabled
 import com.afollestad.materialdialogs.list.MultiChoiceListener
 import com.afollestad.materialdialogs.list.getItemSelector
 import com.afollestad.materialdialogs.utils.MDUtil.createColorSelector
-import com.afollestad.materialdialogs.utils.MDUtil.maybeSetTextColor
 import com.afollestad.materialdialogs.utils.MDUtil.inflate
+import com.afollestad.materialdialogs.utils.MDUtil.maybeSetTextColor
 import com.afollestad.materialdialogs.utils.appendAll
 import com.afollestad.materialdialogs.utils.pullIndices
 import com.afollestad.materialdialogs.utils.removeAll
@@ -57,7 +57,10 @@ internal class MultiChoiceViewHolder(
       titleView.isEnabled = value
     }
 
-  override fun onClick(view: View) = adapter.itemClicked(adapterPosition)
+  override fun onClick(view: View) {
+    if (adapterPosition < 0) return
+    adapter.itemClicked(adapterPosition)
+  }
 }
 
 /**
@@ -67,13 +70,14 @@ internal class MultiChoiceViewHolder(
  */
 internal class MultiChoiceDialogAdapter(
   private var dialog: MaterialDialog,
-  internal var items: List<String>,
+  internal var items: List<CharSequence>,
   disabledItems: IntArray?,
   initialSelection: IntArray,
   private val waitForActionButton: Boolean,
   private val allowEmptySelection: Boolean,
   internal var selection: MultiChoiceListener
-) : RecyclerView.Adapter<MultiChoiceViewHolder>(), DialogAdapter<String, MultiChoiceListener> {
+) : RecyclerView.Adapter<MultiChoiceViewHolder>(),
+    DialogAdapter<CharSequence, MultiChoiceListener> {
 
   private var currentSelection: IntArray = initialSelection
     set(value) {
@@ -184,7 +188,7 @@ internal class MultiChoiceDialogAdapter(
   }
 
   override fun replaceItems(
-    items: List<String>,
+    items: List<CharSequence>,
     listener: MultiChoiceListener
   ) {
     this.items = items
@@ -201,7 +205,12 @@ internal class MultiChoiceDialogAdapter(
 
   override fun checkItems(indices: IntArray) {
     val existingSelection = this.currentSelection
-    val indicesToAdd = indices.filter { !existingSelection.contains(it) }
+    val indicesToAdd = indices.filter {
+      check(it >= 0 && it < items.size) {
+        "Index $it is out of range for this adapter of ${items.size} items."
+      }
+      !existingSelection.contains(it)
+    }
     this.currentSelection = this.currentSelection.appendAll(indicesToAdd)
     if (existingSelection.isEmpty()) {
       dialog.setActionButtonEnabled(POSITIVE, true)
@@ -210,7 +219,12 @@ internal class MultiChoiceDialogAdapter(
 
   override fun uncheckItems(indices: IntArray) {
     val existingSelection = this.currentSelection
-    val indicesToAdd = indices.filter { existingSelection.contains(it) }
+    val indicesToAdd = indices.filter {
+      check(it >= 0 && it < items.size) {
+        "Index $it is out of range for this adapter of ${items.size} items."
+      }
+      existingSelection.contains(it)
+    }
     this.currentSelection = this.currentSelection.removeAll(indicesToAdd)
         .also {
           if (it.isEmpty()) {

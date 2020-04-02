@@ -30,8 +30,8 @@ import com.afollestad.materialdialogs.actions.setActionButtonEnabled
 import com.afollestad.materialdialogs.list.SingleChoiceListener
 import com.afollestad.materialdialogs.list.getItemSelector
 import com.afollestad.materialdialogs.utils.MDUtil.createColorSelector
-import com.afollestad.materialdialogs.utils.MDUtil.maybeSetTextColor
 import com.afollestad.materialdialogs.utils.MDUtil.inflate
+import com.afollestad.materialdialogs.utils.MDUtil.maybeSetTextColor
 import com.afollestad.materialdialogs.utils.resolveColors
 
 /** @author Aidan Follestad (afollestad) */
@@ -55,7 +55,10 @@ internal class SingleChoiceViewHolder(
       titleView.isEnabled = value
     }
 
-  override fun onClick(view: View) = adapter.itemClicked(adapterPosition)
+  override fun onClick(view: View) {
+    if (adapterPosition < 0) return
+    adapter.itemClicked(adapterPosition)
+  }
 }
 
 /**
@@ -65,15 +68,17 @@ internal class SingleChoiceViewHolder(
  */
 internal class SingleChoiceDialogAdapter(
   private var dialog: MaterialDialog,
-  internal var items: List<String>,
+  internal var items: List<CharSequence>,
   disabledItems: IntArray?,
   initialSelection: Int,
   private val waitForActionButton: Boolean,
   internal var selection: SingleChoiceListener
-) : RecyclerView.Adapter<SingleChoiceViewHolder>(), DialogAdapter<String, SingleChoiceListener> {
+) : RecyclerView.Adapter<SingleChoiceViewHolder>(),
+    DialogAdapter<CharSequence, SingleChoiceListener> {
 
   private var currentSelection: Int = initialSelection
     set(value) {
+      if (value == field) return
       val previousSelection = field
       field = value
       notifyItemChanged(previousSelection, UncheckPayload)
@@ -161,7 +166,7 @@ internal class SingleChoiceDialogAdapter(
   }
 
   override fun replaceItems(
-    items: List<String>,
+    items: List<CharSequence>,
     listener: SingleChoiceListener
   ) {
     this.items = items
@@ -178,12 +183,18 @@ internal class SingleChoiceDialogAdapter(
 
   override fun checkItems(indices: IntArray) {
     val targetIndex = if (indices.isNotEmpty()) indices[0] else -1
+    check(targetIndex >= 0 && targetIndex < items.size) {
+      "Index $targetIndex is out of range for this adapter of ${items.size} items."
+    }
     if (this.disabledIndices.contains(targetIndex)) return
     this.currentSelection = targetIndex
   }
 
   override fun uncheckItems(indices: IntArray) {
     val targetIndex = if (indices.isNotEmpty()) indices[0] else -1
+    check(targetIndex >= 0 && targetIndex < items.size) {
+      "Index $targetIndex is out of range for this adapter of ${items.size} items."
+    }
     if (this.disabledIndices.contains(targetIndex)) return
     this.currentSelection = -1
   }

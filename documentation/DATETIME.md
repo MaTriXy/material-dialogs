@@ -16,13 +16,13 @@ The `datetime` module contains extensions to make date, time, and date-time pick
 ```gradle
 dependencies {
   ...
-  implementation 'com.afollestad.material-dialogs:datetime:3.0.0-alpha1'
+  implementation 'com.afollestad.material-dialogs:datetime:3.2.1'
 }
 ```
 
 ## Date
 
-<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/datepicker.png" width="200px" />
+<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/datepicker.png" width="250px" />
 
 ```kotlin
 MaterialDialog(this).show {
@@ -33,11 +33,11 @@ MaterialDialog(this).show {
 }
 ```
 
-You can optionally provide `minDate` and `currentDate` parameters as well.
+You can optionally provide `minDate`, `maxDate` and `currentDate` parameters as well.
 
 ## Time
 
-<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/timepicker.png" width="200px" />
+<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/timepicker.png" width="250px" />
 
 ```kotlin
 MaterialDialog(this).show {
@@ -63,5 +63,5 @@ MaterialDialog(this).show {
 }
 ```
 
-You can optionally provide `minDateTime`, `currentDateTime`, `show24HoursView`, 
+You can optionally provide `minDateTime`, `maxDate`,  `currentDateTime`, `show24HoursView`, 
 and `requireFutureDateTime` parameters as well.

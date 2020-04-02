@@ -25,8 +25,7 @@ import android.view.Gravity.CENTER
 import androidx.annotation.ColorInt
 import androidx.appcompat.widget.AppCompatButton
 import com.afollestad.materialdialogs.R
-import com.afollestad.materialdialogs.Theme.Companion.inferTheme
-import com.afollestad.materialdialogs.Theme.LIGHT
+import com.afollestad.materialdialogs.inferThemeIsLight
 import com.afollestad.materialdialogs.utils.MDUtil.ifNotZero
 import com.afollestad.materialdialogs.utils.MDUtil.resolveColor
 import com.afollestad.materialdialogs.utils.MDUtil.resolveDrawable
@@ -50,6 +49,7 @@ class DialogActionButton(
 
   private var enabledColor: Int = 0
   private var disabledColor: Int = 0
+  private var enabledColorOverride: Int? = null
 
   init {
     isClickable = true
@@ -70,15 +70,15 @@ class DialogActionButton(
     setSupportAllCaps(casing == CASING_UPPER)
 
     // Text color
-    val theme = inferTheme(appContext)
+    val isLightTheme = inferThemeIsLight(appContext)
     enabledColor = resolveColor(appContext, attr = R.attr.md_color_button_text) {
       resolveColor(appContext, attr = R.attr.colorPrimary)
     }
     val disabledColorRes =
-      if (theme == LIGHT) R.color.md_disabled_text_light_theme
+      if (isLightTheme) R.color.md_disabled_text_light_theme
       else R.color.md_disabled_text_dark_theme
     disabledColor = resolveColor(baseContext, res = disabledColorRes)
-    setTextColor(enabledColor)
+    setTextColor(enabledColorOverride ?: enabledColor)
 
     // Selector
     val bgDrawable = resolveDrawable(baseContext, attr = R.attr.md_button_selector)
@@ -101,11 +101,12 @@ class DialogActionButton(
 
   fun updateTextColor(@ColorInt color: Int) {
     enabledColor = color
+    enabledColorOverride = color
     isEnabled = isEnabled
   }
 
   override fun setEnabled(enabled: Boolean) {
     super.setEnabled(enabled)
-    setTextColor(if (enabled) enabledColor else disabledColor)
+    setTextColor(if (enabled) enabledColorOverride ?: enabledColor else disabledColor)
   }
 }

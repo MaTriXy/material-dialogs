@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.afollestad.materialdialogs.internal.main
+package com.afollestad.materialdialogs.internal.message
 
 import android.content.Context
 import android.graphics.Typeface
-import android.text.method.LinkMovementMethod
 import android.util.AttributeSet
 import android.view.View
 import android.view.View.MeasureSpec.AT_MOST
@@ -38,8 +37,12 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.R
 import com.afollestad.materialdialogs.internal.button.DialogActionButtonLayout
 import com.afollestad.materialdialogs.internal.list.DialogRecyclerView
+import com.afollestad.materialdialogs.internal.main.DialogLayout
+import com.afollestad.materialdialogs.internal.main.DialogScrollView
+import com.afollestad.materialdialogs.internal.main.DialogTitleLayout
+import com.afollestad.materialdialogs.message.DialogMessageSettings
+import com.afollestad.materialdialogs.utils.MDUtil.dimenPx
 import com.afollestad.materialdialogs.utils.MDUtil.maybeSetTextColor
-import com.afollestad.materialdialogs.utils.MDUtil.resolveString
 import com.afollestad.materialdialogs.utils.MDUtil.updatePadding
 import com.afollestad.materialdialogs.utils.inflate
 
@@ -60,6 +63,10 @@ class DialogContentLayout(
     get() = parent as DialogLayout
   private var scrollFrame: ViewGroup? = null
   private var messageTextView: TextView? = null
+  private var useHorizontalPadding: Boolean = false
+  private val frameHorizontalMargin: Int by lazy {
+    resources.getDimensionPixelSize(R.dimen.md_dialog_frame_margin_horizontal)
+  }
 
   var scrollView: DialogScrollView? = null
   var recyclerView: DialogRecyclerView? = null
@@ -69,25 +76,23 @@ class DialogContentLayout(
     dialog: MaterialDialog,
     @StringRes res: Int?,
     text: CharSequence?,
-    html: Boolean,
-    lineHeightMultiplier: Float,
-    typeface: Typeface?
+    typeface: Typeface?,
+    applySettings: (DialogMessageSettings.() -> Unit)?
   ) {
-    addContentScrollView()
+    addContentScrollView(noVerticalPadding = false)
     if (messageTextView == null) {
       messageTextView = inflate<TextView>(R.layout.md_dialog_stub_message, scrollFrame!!).apply {
         scrollFrame!!.addView(this)
       }
     }
 
-    typeface.let { messageTextView?.typeface = it }
+    val messageSettings = DialogMessageSettings(dialog, messageTextView!!)
+    applySettings?.invoke(messageSettings)
+
     messageTextView?.run {
+      typeface?.let { this.typeface = it }
       maybeSetTextColor(dialog.windowContext, R.attr.md_color_content)
-      setText(text ?: resolveString(dialog, res, html = html))
-      setLineSpacing(0f, lineHeightMultiplier)
-      if (html) {
-        movementMethod = LinkMovementMethod.getInstance()
-      }
+      messageSettings.setText(res, text)
     }
   }
 
@@ -109,7 +114,9 @@ class DialogContentLayout(
   fun addCustomView(
     @LayoutRes res: Int?,
     view: View?,
-    scrollable: Boolean
+    scrollable: Boolean,
+    noVerticalPadding: Boolean,
+    horizontalPadding: Boolean
   ): View {
     check(customView == null) { "Custom view already set." }
 
@@ -120,10 +127,21 @@ class DialogContentLayout(
     }
 
     if (scrollable) {
-      addContentScrollView()
+      // Since the view is going in the main ScrollView, apply padding to custom view.
+      this.useHorizontalPadding = false
+      addContentScrollView(noVerticalPadding = noVerticalPadding)
       customView = view ?: inflate(res!!, scrollFrame)
-      scrollFrame!!.addView(customView)
+      scrollFrame!!.addView(customView?.apply {
+        if (horizontalPadding) {
+          updatePadding(
+              left = frameHorizontalMargin,
+              right = frameHorizontalMargin
+          )
+        }
+      })
     } else {
+      // Since the view is NOT going in the main ScrollView, we'll offset it in the layout.
+      this.useHorizontalPadding = horizontalPadding
       customView = view ?: inflate(res!!)
       addView(customView)
     }
@@ -190,7 +208,11 @@ class DialogContentLayout(
         continue
       }
       currentChild.measure(
-          makeMeasureSpec(specWidth, EXACTLY),
+          if (currentChild == customView && useHorizontalPadding) {
+            makeMeasureSpec(specWidth - (frameHorizontalMargin * 2), EXACTLY)
+          } else {
+            makeMeasureSpec(specWidth, EXACTLY)
+          },
           makeMeasureSpec(heightPerRemainingChild, AT_MOST)
       )
       totalChildHeight += currentChild.measuredHeight
@@ -210,21 +232,36 @@ class DialogContentLayout(
     for (i in 0 until childCount) {
       val currentChild = getChildAt(i)
       val currentBottom = currentTop + currentChild.measuredHeight
+      val childLeft: Int
+      val childRight: Int
+      if (currentChild == customView && useHorizontalPadding) {
+        childLeft = frameHorizontalMargin
+        childRight = measuredWidth - frameHorizontalMargin
+      } else {
+        childLeft = 0
+        childRight = measuredWidth
+      }
       currentChild.layout(
-          0,
-          currentTop,
-          measuredWidth,
-          currentBottom
+          /*left=   */childLeft,
+          /*top=    */currentTop,
+          /*right=  */childRight,
+          /*bottom= */currentBottom
       )
       currentTop = currentBottom
     }
   }
 
-  private fun addContentScrollView() {
+  private fun addContentScrollView(
+    noVerticalPadding: Boolean
+  ) {
     if (scrollView == null) {
       scrollView = inflate<DialogScrollView>(R.layout.md_dialog_stub_scrollview).apply {
         this.rootView = rootLayout
         scrollFrame = this.getChildAt(0) as ViewGroup
+        if (!noVerticalPadding) {
+          val scrollBottomPadding = dimenPx(R.dimen.md_dialog_frame_margin_vertical)
+          updatePadding(bottom = scrollBottomPadding)
+        }
       }
       addView(scrollView)
     }

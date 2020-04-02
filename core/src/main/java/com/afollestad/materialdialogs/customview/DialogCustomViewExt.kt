@@ -30,9 +30,8 @@ internal const val CUSTOM_VIEW_NO_VERTICAL_PADDING = "md.custom_view_no_vertical
  * @throws IllegalStateException if there is no custom view set.
  */
 @CheckResult fun MaterialDialog.getCustomView(): View {
-  return this.view.contentLayout.customView ?: throw IllegalStateException(
-      "You have not setup this dialog as a customView dialog."
-  )
+  return this.view.contentLayout.customView
+      ?: error("You have not setup this dialog as a customView dialog.")
 }
 
 /**
@@ -43,12 +42,15 @@ internal const val CUSTOM_VIEW_NO_VERTICAL_PADDING = "md.custom_view_no_vertical
  * @param view The view to insert as the custom view.
  * @param scrollable Whether or not the custom view is automatically wrapped in a ScrollView.
  * @param noVerticalPadding When set to true, vertical padding is not added around your content.
+ * @param horizontalPadding When true, 24dp horizontal padding is applied to your custom view.
+ * @param dialogWrapContent When true, the dialog will wrap the content width.
  */
 fun MaterialDialog.customView(
   @LayoutRes viewRes: Int? = null,
   view: View? = null,
   scrollable: Boolean = false,
   noVerticalPadding: Boolean = false,
+  horizontalPadding: Boolean = false,
   dialogWrapContent: Boolean = false
 ): MaterialDialog {
   assertOneSet("customView", view, viewRes)
@@ -59,11 +61,14 @@ fun MaterialDialog.customView(
     maxWidth(literal = 0)
   }
 
-  this.view.contentLayout.addCustomView(
-      res = viewRes,
-      view = view,
-      scrollable = scrollable
-  )
+  this.view.contentLayout
+      .addCustomView(
+          res = viewRes,
+          view = view,
+          scrollable = scrollable,
+          horizontalPadding = horizontalPadding,
+          noVerticalPadding = noVerticalPadding
+      )
       .also {
         if (dialogWrapContent) {
           it.waitForWidth {

@@ -17,14 +17,15 @@
 
 package com.afollestad.materialdialogs.list
 
+import android.util.Log
 import androidx.annotation.ArrayRes
 import androidx.annotation.CheckResult
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.WhichButton.POSITIVE
 import com.afollestad.materialdialogs.actions.setActionButtonEnabled
-import com.afollestad.materialdialogs.utils.MDUtil.assertOneSet
 import com.afollestad.materialdialogs.internal.list.DialogAdapter
 import com.afollestad.materialdialogs.internal.list.SingleChoiceDialogAdapter
+import com.afollestad.materialdialogs.utils.MDUtil.assertOneSet
 import com.afollestad.materialdialogs.utils.MDUtil.getStringArray
 
 /**
@@ -37,7 +38,7 @@ import com.afollestad.materialdialogs.utils.MDUtil.getStringArray
  */
 @CheckResult fun MaterialDialog.listItemsSingleChoice(
   @ArrayRes res: Int? = null,
-  items: List<String>? = null,
+  items: List<CharSequence>? = null,
   disabledIndices: IntArray? = null,
   initialSelection: Int = -1,
   waitForPositiveButton: Boolean = true,
@@ -51,10 +52,15 @@ import com.afollestad.materialdialogs.utils.MDUtil.getStringArray
   }
 
   if (getListAdapter() != null) {
-    return updateListItems(
+    Log.w(
+        "MaterialDialogs",
+        "Prefer calling updateListItemsSingleChoice(...) over listItemsSingleChoice(...) again."
+    )
+    return updateListItemsSingleChoice(
         res = res,
         items = items,
-        disabledIndices = disabledIndices
+        disabledIndices = disabledIndices,
+        selection = selection
     )
   }
 
@@ -69,6 +75,28 @@ import com.afollestad.materialdialogs.utils.MDUtil.getStringArray
           selection = selection
       )
   )
+}
+
+/**
+ * Updates the items, and optionally the disabled indices, of a single choice list dialog.
+ *
+ * @author Aidan Follestad (@afollestad)
+ */
+fun MaterialDialog.updateListItemsSingleChoice(
+  @ArrayRes res: Int? = null,
+  items: List<CharSequence>? = null,
+  disabledIndices: IntArray? = null,
+  selection: SingleChoiceListener = null
+): MaterialDialog {
+  assertOneSet("updateListItemsSingleChoice", items, res)
+  val array = items ?: windowContext.getStringArray(res).toList()
+  val adapter = getListAdapter()
+  check(adapter is SingleChoiceDialogAdapter) {
+    "updateListItemsSingleChoice(...) can't be used before you've created a single choice list dialog."
+  }
+  adapter.replaceItems(array, selection)
+  disabledIndices?.let(adapter::disableItems)
+  return this
 }
 
 /** Checks a single or multiple choice list item. */

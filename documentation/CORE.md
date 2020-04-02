@@ -4,19 +4,20 @@
 
 1. [Gradle Dependency](#gradle-dependency)
 2. [Basics](#basics)
-3. [Action Buttons](#action-buttons)
-4. [Adding an Icon](#adding-an-icon)
-5. [Callbacks](#callbacks)
-6. [Dismissing](#dismissing)
-7. [Lists](#lists)
+3. [Customizing the Message](#customizing-the-message)
+4. [Action Buttons](#action-buttons)
+5. [Adding an Icon](#adding-an-icon)
+6. [Callbacks](#callbacks)
+7. [Dismissing](#dismissing)
+8. [Lists](#lists)
     1. [Plain](#plain)
     2. [Single Choice](#single-choice)
     3. [Multiple Choice](#multiple-choice)
     4. [Custom Adapters](#custom-adapters)
-8. [Checkbox Prompts](#checkbox-prompts)
-9. [Custom Views](#custom-views)
-10. [Miscellaneous](#miscellaneous)
-11. [Theming](#theming)
+9. [Checkbox Prompts](#checkbox-prompts)
+10. [Custom Views](#custom-views)
+11. [Miscellaneous](#miscellaneous)
+12. [Theming](#theming)
     1. [Light and Dark](#light-and-dark)
     2. [Background Color](#background-color)
     3. [Ripple Color](#ripple-color)
@@ -35,7 +36,7 @@ core and normal-use functionality.
 ```gradle
 dependencies {
   ...
-  implementation 'com.afollestad.material-dialogs:core:3.0.0-alpha1'
+  implementation 'com.afollestad.material-dialogs:core:3.2.1'
 }
 ```
 
@@ -43,7 +44,7 @@ dependencies {
 
 Here's a very basic example of creating and showing a dialog:
 
-<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/basic.png" width="200px" />
+<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/basic.png" width="250px" />
 
 ```kotlin
 MaterialDialog(this).show {
@@ -73,11 +74,32 @@ val dialog = MaterialDialog(this)
 dialog.show()
 ```
 
+## Customizing the Message
+
+The `message` function lets you trail it with a lambda, which exposes certain built-in modifiers 
+along with allowing you to act on the `TextView` directly.
+
+```kotlin
+MaterialDialog(this).show {
+  ...
+  message(R.string.your_message) {
+      html() // format, color, etc. with tags in string
+      html { link ->  // same as above, but... 
+        // Invokes a callback when a URL is clicked instead of auto opening it in a browser
+      }
+      lineSpacing(1.4f) // modifies line spacing, default is 1.0f
+      
+      // You can directly act on the message TextView as well
+      val textView = messageTextView
+  }
+}
+```
+
 ## Action Buttons
 
 There are simple methods for adding action buttons:
 
-<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/basic_with_buttons.png" width="200px" />
+<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/basic_with_buttons.png" width="250px" />
 
 ```kotlin
 MaterialDialog(this).show {
@@ -113,13 +135,13 @@ MaterialDialog(this).show {
 If action buttons together are too long to fit in the dialog's width, they will be automatically
 stacked:
 
-<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/stacked_buttons.png" width="200px" />
+<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/stacked_buttons.png" width="250px" />
 
 ## Adding an Icon
 
 You can display an icon to the left of the title:
 
-<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/icon.png" width="200px" />
+<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/icon.png" width="250px" />
 
 ```kotlin
 MaterialDialog(this).show {
@@ -176,7 +198,7 @@ MaterialDialog(this).show {
 
 You can show lists using the `listItems` extension on `MaterialDialog`:
 
-<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/basic_list.png" width="200px" />
+<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/basic_list.png" width="250px" />
 
 ```kotlin
 MaterialDialog(this).show {
@@ -209,7 +231,7 @@ MaterialDialog(this).show {
 You can show single choice (radio button) lists using the `listItemsSingleChoice` extension 
 on `MaterialDialog`:
 
-<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/single_choice_list.png" width="200px" />
+<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/single_choice_list.png" width="250px" />
 
 ```kotlin
 MaterialDialog(this).show {
@@ -292,7 +314,7 @@ val checked: Boolean = dialog.isItemChecked(index)
 
 You can show multiple choice (checkbox) lists using the `listItemsMultiChoice` extension on `MaterialDialog`:
 
-<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/multi_choice_list.png" width="200px" />
+<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/multi_choice_list.png" width="250px" />
 
 ```kotlin
 MaterialDialog(this).show {
@@ -415,7 +437,7 @@ val recyclerView: RecyclerView = dialog.getRecyclerView()
 Checkbox prompts can be used together with any other dialog type, it gets shown in the same view
 which shows the action buttons.
 
-<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/checkbox_prompt.png" width="200px" />
+<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/checkbox_prompt.png" width="250px" />
 
 ```kotlin
 MaterialDialog(this).show {
@@ -460,7 +482,7 @@ MaterialDialog(this).show {
 A lot of the included extensions use custom views, such as the color chooser dialog. There's also 
 a simple example in the sample project.
 
-<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/custom_view.png" width="200px" /> 
+<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/custom_view.png" width="250px" /> 
 
 ```kotlin
 MaterialDialog(this).show {
@@ -521,7 +543,7 @@ change fonts, corner rounding, etc.
 Light and dark theming is automatic based on your app's theme (basically whether `android:textColorPrimary` 
 is more light or more dark):
 
-<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/lightanddarkthemes.png" width="400px" />
+<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/lightanddarkthemes.png" width="500px" />
 
 ### Background Color
 
@@ -539,9 +561,9 @@ theme for the ripple color of list items, buttons, etc. by default. You can over
 
 Corner radius is the rounding of dialog corners:
 
-<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/customtheme.png" width="200px" />
+<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/customtheme.png" width="250px" />
 
-it can be changed with an attribute in your app theme. It defaults to 2dp:
+it can be changed with an attribute in your app theme. It defaults to 4dp:
 
 ```xml
 <style name="AppTheme.Custom" parent="Theme.AppCompat">
@@ -549,6 +571,17 @@ it can be changed with an attribute in your app theme. It defaults to 2dp:
   <item name="md_corner_radius">16dp</item>
     
 </style>
+```
+
+There is also a programmatic setter for this value:
+
+```kotlin
+MaterialDialog(this).show {
+  // literal, internally converts to dp so 16dp
+  cornerRadius(16f)
+  // Using a dimen instead is encouraged as it's easier to have all instances changeable from one place
+  cornerRadius(res = R.dimen.my_corner_radius)
+}
 ```
 
 ### Text Color
@@ -585,22 +618,4 @@ using attributes in your app's theme.
 
 See the "Custom Theme" example in the sample project (open the overflow menu for the theme switcher).
 
-<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/customtheme.png" width="200px" />
-
-### Widget Color
-
-By default, widgets like CheckBoxes and RadioButtons use your theme's accent color when they are 
-checked. You can override that to use whatever color you want. This applies to checkbox prompts, 
-single and multiple choice lists, etc. but will not automatically apply to widgets in your own 
-custom views.
-
-```xml
-<style name="AppTheme.Custom" parent="Theme.AppCompat">
-
-  <item name="md_widget_color">@color/your_color</item>
-  
-  <!-- Generally this should be avoided, checkboxes should be white or gray when unchecked -->
-  <item name="md_widget_color_unchecked">@color/your_color</item>
-    
-</style>
-```
+<img src="https://raw.githubusercontent.com/afollestad/material-dialogs/master/art/customtheme.png" width="250px" />

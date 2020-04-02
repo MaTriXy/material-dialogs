@@ -16,6 +16,7 @@
 package com.afollestad.materialdialogs.internal.main
 
 import android.content.Context
+import android.content.Context.WINDOW_SERVICE
 import android.graphics.Canvas
 import android.graphics.Color.BLUE
 import android.graphics.Color.CYAN
@@ -24,19 +25,27 @@ import android.graphics.Color.RED
 import android.graphics.Color.YELLOW
 import android.graphics.Paint
 import android.graphics.Paint.Style.FILL
+import android.graphics.Path
+import android.graphics.Path.Direction.CW
+import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View.MeasureSpec.AT_MOST
 import android.view.View.MeasureSpec.EXACTLY
 import android.view.View.MeasureSpec.UNSPECIFIED
 import android.view.View.MeasureSpec.getSize
 import android.view.View.MeasureSpec.makeMeasureSpec
+import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.annotation.ColorInt
+import com.afollestad.materialdialogs.LayoutMode
+import com.afollestad.materialdialogs.LayoutMode.WRAP_CONTENT
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.R
 import com.afollestad.materialdialogs.internal.button.DialogActionButtonLayout
 import com.afollestad.materialdialogs.internal.button.shouldBeVisible
+import com.afollestad.materialdialogs.internal.message.DialogContentLayout
 import com.afollestad.materialdialogs.utils.MDUtil.dimenPx
+import com.afollestad.materialdialogs.utils.MDUtil.getWidthAndHeight
 import com.afollestad.materialdialogs.utils.dp
 import com.afollestad.materialdialogs.utils.isRtl
 import com.afollestad.materialdialogs.utils.isVisible
@@ -58,6 +67,14 @@ class DialogLayout(
       field = value
       setWillNotDraw(!value)
     }
+  var cornerRadii: FloatArray = floatArrayOf()
+    set(value) {
+      field = value
+      if (!cornerRadiusPath.isEmpty) {
+        cornerRadiusPath.reset()
+      }
+      invalidate()
+    }
   private var debugPaint: Paint? = null
 
   internal val frameMarginVertical = dimenPx(R.dimen.md_dialog_frame_margin_vertical)
@@ -67,7 +84,12 @@ class DialogLayout(
   lateinit var titleLayout: DialogTitleLayout
   lateinit var contentLayout: DialogContentLayout
   var buttonsLayout: DialogActionButtonLayout? = null
+  var layoutMode: LayoutMode = WRAP_CONTENT
+
   private var isButtonsLayoutAChild: Boolean = true
+  private var windowHeight: Int = -1
+  private val cornerRadiusPath = Path()
+  private val cornerRadiusRect = RectF()
 
   override fun onFinishInflate() {
     super.onFinishInflate()
@@ -95,6 +117,13 @@ class DialogLayout(
   ) {
     titleLayout.drawDivider = showTop
     buttonsLayout?.drawDivider = showBottom
+  }
+
+  override fun onAttachedToWindow() {
+    super.onAttachedToWindow()
+    val windowManager = context.getSystemService(WINDOW_SERVICE) as WindowManager
+    val (_, windowHeight) = windowManager.getWidthAndHeight()
+    this.windowHeight = windowHeight
   }
 
   override fun onMeasure(
@@ -126,10 +155,24 @@ class DialogLayout(
         makeMeasureSpec(remainingHeight, AT_MOST)
     )
 
-    val totalHeight = titleLayout.measuredHeight +
-        contentLayout.measuredHeight +
-        (buttonsLayout?.measuredHeight ?: 0)
-    setMeasuredDimension(specWidth, totalHeight)
+    if (layoutMode == WRAP_CONTENT) {
+      val totalHeight = titleLayout.measuredHeight +
+          contentLayout.measuredHeight +
+          (buttonsLayout?.measuredHeight ?: 0)
+      setMeasuredDimension(specWidth, totalHeight)
+    } else {
+      setMeasuredDimension(specWidth, windowHeight)
+    }
+
+    if (cornerRadii.isNotEmpty()) {
+      cornerRadiusRect.apply {
+        left = 0f
+        top = 0f
+        right = measuredWidth.toFloat()
+        bottom = measuredHeight.toFloat()
+      }
+      cornerRadiusPath.addRoundRect(cornerRadiusRect, cornerRadii, CW)
+    }
   }
 
   override fun onLayout(
@@ -263,6 +306,13 @@ class DialogLayout(
       // Blue line over the top of the buttons with inset
       canvas.horizontalLine(BLUE, start = buttonsTop - dp(8))
     }
+  }
+
+  override fun dispatchDraw(canvas: Canvas) {
+    if (cornerRadii.isNotEmpty()) {
+      canvas.clipPath(cornerRadiusPath)
+    }
+    super.dispatchDraw(canvas)
   }
 
   private fun paint(
